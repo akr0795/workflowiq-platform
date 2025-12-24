@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 import {
   Search,
   Plus,
@@ -13,28 +15,29 @@ import {
   Phone,
   MoreVertical,
   Users,
+  Edit,
+  Trash2,
 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import TeamMemberFormModal, { TeamMember } from '@/components/team/TeamMemberFormModal';
 
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'manager' | 'developer';
-  department: string;
-  phone: string;
-  utilization: number;
-  activeTasks: number;
-  completedTasks: number;
-  status: 'active' | 'away' | 'offline';
-}
-
-const mockTeamMembers: TeamMember[] = [
+const initialTeamMembers: TeamMember[] = [
   {
     id: '1',
     name: 'Rajesh Kumar',
@@ -122,28 +125,72 @@ const statusColors: Record<TeamMember['status'], string> = {
 };
 
 const Team: React.FC = () => {
+  const { hasRole } = useAuth();
+  const isAdmin = hasRole(['admin']);
+  
   const [searchQuery, setSearchQuery] = useState('');
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<TeamMember | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
 
   const filteredMembers = useMemo(() => {
-    if (!searchQuery) return mockTeamMembers;
+    if (!searchQuery) return teamMembers;
     const query = searchQuery.toLowerCase();
-    return mockTeamMembers.filter(
+    return teamMembers.filter(
       (member) =>
         member.name.toLowerCase().includes(query) ||
         member.email.toLowerCase().includes(query) ||
         member.department.toLowerCase().includes(query)
     );
-  }, [searchQuery]);
+  }, [searchQuery, teamMembers]);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase();
+  };
+
+  const handleAddMember = () => {
+    setEditingMember(null);
+    setIsModalOpen(true);
+  };
+
+  const handleEditMember = (member: TeamMember) => {
+    setEditingMember(member);
+    setIsModalOpen(true);
+  };
+
+  const handleDeleteClick = (member: TeamMember) => {
+    setMemberToDelete(member);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (memberToDelete) {
+      setTeamMembers((prev) => prev.filter((m) => m.id !== memberToDelete.id));
+      toast.success(`${memberToDelete.name} has been removed from the team`);
+      setDeleteDialogOpen(false);
+      setMemberToDelete(null);
+    }
+  };
+
+  const handleSubmit = (memberData: TeamMember) => {
+    if (editingMember) {
+      setTeamMembers((prev) =>
+        prev.map((m) => (m.id === memberData.id ? memberData : m))
+      );
+      toast.success(`${memberData.name}'s details updated successfully`);
+    } else {
+      setTeamMembers((prev) => [...prev, memberData]);
+      toast.success(`${memberData.name} added to the team`);
+    }
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Header
         title="Team"
-        subtitle={`${mockTeamMembers.length} team members`}
+        subtitle={`${teamMembers.length} team members`}
       />
 
       <div className="p-6 space-y-6">
@@ -160,10 +207,12 @@ const Team: React.FC = () => {
             />
           </div>
 
-          <Button>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Member
-          </Button>
+          {isAdmin && (
+            <Button onClick={handleAddMember}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Member
+            </Button>
+          )}
         </div>
 
         {/* Team Grid */}
@@ -196,18 +245,29 @@ const Team: React.FC = () => {
                       <p className="text-sm text-muted-foreground">{member.department}</p>
                     </div>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreVertical className="w-4 h-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem>View Profile</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Details</DropdownMenuItem>
-                      <DropdownMenuItem>View Tasks</DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  {isAdmin && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditMember(member)}>
+                          <Edit className="w-4 h-4 mr-2" />
+                          Edit Details
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive"
+                          onClick={() => handleDeleteClick(member)}
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Remove Member
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                 </div>
 
                 {/* Contact */}
@@ -262,6 +322,35 @@ const Team: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Add/Edit Modal */}
+      <TeamMemberFormModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        member={editingMember}
+        onSubmit={handleSubmit}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove Team Member</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove {memberToDelete?.name} from the team? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Remove
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
