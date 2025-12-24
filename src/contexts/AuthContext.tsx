@@ -51,8 +51,8 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [authState, setAuthState] = useState<AuthState>({
-    user: MOCK_USERS['developer@tcs.com'], // Default logged in for demo
-    isAuthenticated: true,
+    user: null,
+    isAuthenticated: false,
     isLoading: false,
   });
 
