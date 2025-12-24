@@ -2,6 +2,7 @@ import React from 'react';
 import { Task } from '@/types';
 import TaskStatusBadge from './TaskStatusBadge';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import {
   Table,
@@ -11,11 +12,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Clock, Calendar } from 'lucide-react';
+import { Clock, Calendar, Trash2 } from 'lucide-react';
 
 interface TaskTableProps {
   tasks: Task[];
   onTaskClick?: (task: Task) => void;
+  onDeleteTask?: (task: Task) => void;
 }
 
 const priorityColors: Record<Task['priority'], string> = {
@@ -25,7 +27,7 @@ const priorityColors: Record<Task['priority'], string> = {
   critical: 'bg-destructive/10 text-destructive',
 };
 
-const TaskTable: React.FC<TaskTableProps> = ({ tasks, onTaskClick }) => {
+const TaskTable: React.FC<TaskTableProps> = ({ tasks, onTaskClick, onDeleteTask }) => {
   const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
       month: 'short',
@@ -49,6 +51,7 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onTaskClick }) => {
             <TableHead>Due Date</TableHead>
             <TableHead>Time Logged</TableHead>
             <TableHead>Tags</TableHead>
+            <TableHead className="w-[60px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -104,6 +107,19 @@ const TaskTable: React.FC<TaskTableProps> = ({ tasks, onTaskClick }) => {
                     </Badge>
                   )}
                 </div>
+              </TableCell>
+              <TableCell>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDeleteTask?.(task);
+                  }}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}
