@@ -2,7 +2,7 @@
 
 A full-stack-style enterprise workflow management web application built as a personal project. WorkflowIQ provides a unified interface for managing projects, tasks, approvals, team members, and analytics — with role-based access control for admins, managers, and developers.
 
-> **Note:** This is a frontend-only application. Authentication and data are simulated with mock users and in-memory state for demonstration purposes.
+> **Note:** This is a frontend-only application. Authentication and business data persist in `localStorage` via `AuthContext` and `DataContext` — no backend required for the demo.
 
 ---
 
@@ -28,7 +28,7 @@ A full-stack-style enterprise workflow management web application built as a per
 
 WorkflowIQ is designed to streamline enterprise operations by centralizing project tracking, task management, approval workflows, and team analytics into a single dashboard. The UI follows modern enterprise design patterns with a collapsible sidebar, responsive layouts, and data visualizations powered by Recharts.
 
-The application uses React Router for navigation, React Context for authentication state, and TanStack Query for async data handling. All business data (projects, tasks, approvals, KPIs) is served from mock datasets in `src/data/mockData.ts`, making it easy to explore the full feature set without a backend.
+The application uses React Router for navigation, `AuthContext` for authentication (with session persistence), and `DataContext` as a centralized data store for projects, tasks, approvals, team members, notifications, and live dashboard metrics. All changes persist in `localStorage` across page refreshes.
 
 ---
 
@@ -224,9 +224,11 @@ enterprise-workflow-platform/
 │   │   ├── team/            # Team member forms
 │   │   └── ui/              # shadcn/ui primitives
 │   ├── contexts/
-│   │   └── AuthContext.tsx  # Authentication state and role permissions
+│   │   ├── AuthContext.tsx  # Authentication + session persistence
+│   │   └── DataContext.tsx  # Centralized data store (projects, tasks, etc.)
 │   ├── data/
-│   │   └── mockData.ts      # Mock projects, tasks, KPIs, approvals
+│   │   ├── mockData.ts      # Initial seed data
+│   │   └── initialData.ts   # Default team members and app data
 │   ├── hooks/               # Custom React hooks
 │   ├── lib/
 │   │   └── utils.ts         # Utility functions (cn, etc.)
@@ -263,9 +265,9 @@ enterprise-workflow-platform/
 │          ├── /settings  → Settings                   │
 │          └── /profile   → Profile                    │
 ├─────────────────────────────────────────────────────┤
-│  AuthContext          → Mock auth + RBAC             │
-│  TanStack Query       → Async state management       │
-│  mockData.ts          → In-memory demo data          │
+│  AuthContext          → Auth + session (localStorage)   │
+│  DataContext          → All entities + CRUD + metrics   │
+│  localStorage         → Persists data across refreshes  │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -273,7 +275,7 @@ enterprise-workflow-platform/
 
 1. User submits credentials on `/auth`
 2. `AuthContext` validates against `MOCK_USERS` (password: `password`)
-3. On success, user state is stored in React Context
+3. On success, user state is stored in `AuthContext` and session is saved to `localStorage`
 4. `ProtectedRoute` guards all app routes; unauthenticated users are redirected to `/auth`
 5. Sidebar navigation filters items based on `hasRole()`
 
