@@ -11,9 +11,10 @@ import { Loader2, Building2, Shield, Users } from 'lucide-react';
 
 const Auth: React.FC = () => {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('login');
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -94,16 +95,38 @@ const Auth: React.FC = () => {
     }
 
     setIsLoading(true);
-    
-    // Simulate signup (in real app, this would create a user)
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    toast({
-      title: 'Account Created!',
-      description: 'Your account has been created. You can now log in.',
-    });
-    
-    setIsLoading(false);
+
+    const email = signupEmail;
+
+    try {
+      await register({
+        name: signupName,
+        email,
+        password: signupPassword,
+        department: signupDepartment,
+      });
+
+      toast({
+        title: 'Account Created!',
+        description: 'Your account has been created. You can now sign in.',
+      });
+
+      setSignupName('');
+      setSignupEmail('');
+      setSignupPassword('');
+      setSignupConfirmPassword('');
+      setSignupDepartment('');
+      setLoginEmail(email);
+      setActiveTab('login');
+    } catch (error) {
+      toast({
+        title: 'Signup Failed',
+        description: error instanceof Error ? error.message : 'Could not create account',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -170,13 +193,13 @@ const Auth: React.FC = () => {
               <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
                 <Building2 className="w-6 h-6 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold text-foreground">Enterprise Workflow</span>
+              <span className="text-xl font-bold text-foreground">WorkflowIQ</span>
             </div>
             <CardTitle className="text-2xl">Welcome</CardTitle>
             <CardDescription>Sign in to your account or create a new one</CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue="login" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>

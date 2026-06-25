@@ -29,18 +29,7 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 
-export interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: 'admin' | 'manager' | 'developer';
-  department: string;
-  phone: string;
-  utilization: number;
-  activeTasks: number;
-  completedTasks: number;
-  status: 'active' | 'away' | 'offline';
-}
+import { TeamMember } from '@/types';
 
 const teamMemberSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters').max(100),

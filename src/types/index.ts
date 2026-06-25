@@ -116,3 +116,79 @@ export interface ApiError {
   code: string;
   details?: Record<string, string>;
 }
+
+// Team Types
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  department: string;
+  phone: string;
+  utilization: number;
+  activeTasks: number;
+  completedTasks: number;
+  status: 'active' | 'away' | 'offline';
+}
+
+// Activity & Notification Types
+export type ActivityType =
+  | 'task_completed'
+  | 'task_created'
+  | 'task_updated'
+  | 'project_created'
+  | 'project_updated'
+  | 'approval_pending'
+  | 'approval_approved'
+  | 'approval_rejected'
+  | 'deadline_warning'
+  | 'team_update';
+
+export interface ActivityItem {
+  id: string;
+  type: ActivityType;
+  title: string;
+  description: string;
+  createdAt: string;
+  link?: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  description: string;
+  type: 'approval' | 'task' | 'project' | 'general';
+  link?: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface UserPreferences {
+  notifications: {
+    email_tasks: boolean;
+    email_approvals: boolean;
+    email_deadlines: boolean;
+    email_mentions: boolean;
+    email_digest: boolean;
+  };
+  appearance: {
+    compactMode: boolean;
+    reduceAnimations: boolean;
+    highContrast: boolean;
+  };
+}
+
+export const defaultUserPreferences: UserPreferences = {
+  notifications: {
+    email_tasks: true,
+    email_approvals: true,
+    email_deadlines: true,
+    email_mentions: true,
+    email_digest: false,
+  },
+  appearance: {
+    compactMode: false,
+    reduceAnimations: false,
+    highContrast: false,
+  },
+};

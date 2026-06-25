@@ -1,13 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import Header from '@/components/layout/Header';
 import ProductivityChart from '@/components/dashboard/ProductivityChart';
 import TaskTrendChart from '@/components/dashboard/TaskTrendChart';
 import ProjectStatusChart from '@/components/dashboard/ProjectStatusChart';
-import {
-  mockProductivityData,
-  mockTaskTrendData,
-  mockProjectStatusData,
-} from '@/data/mockData';
+import { useData } from '@/contexts/DataContext';
+import { mockProductivityData } from '@/data/mockData';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Download, Calendar, TrendingUp, TrendingDown, Users, Target, Bug, Clock, BarChart3, PieChart, Activity } from 'lucide-react';
@@ -43,14 +40,6 @@ import {
   Radar,
 } from 'recharts';
 
-const developerPerformance = [
-  { name: 'Amit Patel', tasksCompleted: 45, hoursLogged: 168, efficiency: 92 },
-  { name: 'Sneha Reddy', tasksCompleted: 38, hoursLogged: 152, efficiency: 88 },
-  { name: 'Vikram Singh', tasksCompleted: 52, hoursLogged: 175, efficiency: 95 },
-  { name: 'Ananya Gupta', tasksCompleted: 35, hoursLogged: 145, efficiency: 85 },
-  { name: 'Rahul Verma', tasksCompleted: 42, hoursLogged: 160, efficiency: 90 },
-];
-
 const teamSkillsData = [
   { skill: 'React', value: 90 },
   { skill: 'TypeScript', value: 85 },
@@ -77,23 +66,51 @@ const slaBreachData = [
 ];
 
 const Analytics: React.FC = () => {
+  const { kpis, projectStatusData, taskTrendData, tasks, teamMembers } = useData();
   const [dateRange, setDateRange] = useState('30d');
   const [activeTab, setActiveTab] = useState('overview');
 
+  const developerPerformance = useMemo(() =>
+    teamMembers
+      .filter(m => m.role === 'developer')
+      .map(m => ({
+        name: m.name,
+        tasksCompleted: m.completedTasks,
+        hoursLogged: tasks.filter(t => t.assigneeId === m.id).reduce((s, t) => s + t.loggedHours, 0),
+        efficiency: m.utilization,
+      })),
+    [teamMembers, tasks]
+  );
+
+  const rangeMultiplier = dateRange === '7d' ? 0.25 : dateRange === '90d' ? 1.5 : dateRange === '1y' ? 3 : 1;
+
   const handleExport = (format: 'csv' | 'pdf') => {
-    // Simulate export
-    toast.success(`Report exported as ${format.toUpperCase()}`);
+    if (format === 'csv') {
+      generateCSVData();
+      return;
+    }
+    const report = [
+      'WorkflowIQ Analytics Report',
+      `Date Range: ${dateRange}`,
+      '',
+      ...kpis.map(k => `${k.label}: ${k.value}${k.unit || ''}`),
+      '',
+      'Developer Performance:',
+      ...developerPerformance.map(d => `${d.name}: ${d.tasksCompleted} tasks, ${d.hoursLogged}h logged`),
+    ].join('\n');
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `analytics-report-${dateRange}.txt`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+    toast.success('Report downloaded');
   };
 
   const generateCSVData = () => {
-    const headers = ['Metric', 'Value', 'Change'];
-    const data = [
-      ['Avg. Task Completion Time', '3.2 days', '-15%'],
-      ['SLA Compliance Rate', '94.5%', '-1.8%'],
-      ['Team Velocity', '42 pts/sprint', '+8%'],
-      ['Bug Resolution Rate', '87%', '+5%'],
-    ];
-    
+    const headers = ['Metric', 'Value'];
+    const data = kpis.map(k => [k.label, `${k.value}${k.unit || ''}`]);
     const csvContent = [headers, ...data].map(row => row.join(',')).join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
@@ -231,12 +248,12 @@ const Analytics: React.FC = () => {
             {/* Charts */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ProductivityChart data={mockProductivityData} />
-              <TaskTrendChart data={mockTaskTrendData} />
+              <TaskTrendChart data={taskTrendData.map(d => ({ ...d, completed: Math.round((d.completed as number) * rangeMultiplier), created: Math.round((d.created as number) * rangeMultiplier) }))} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1">
-                <ProjectStatusChart data={mockProjectStatusData} />
+                <ProjectStatusChart data={projectStatusData} />
               </div>
               
               {/* Sprint Velocity */}

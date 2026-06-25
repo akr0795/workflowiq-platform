@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -43,6 +43,7 @@ const NAV_ITEMS: NavItem[] = [
 
 const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const navigate = useNavigate();
   const { user, logout, hasRole } = useAuth();
   const location = useLocation();
 
@@ -121,7 +122,7 @@ const Sidebar: React.FC = () => {
       {/* User Section */}
       <div className="mt-auto border-t border-sidebar-border">
         <div className={cn('p-4', isCollapsed && 'px-2')}>
-          <div className={cn('flex items-center gap-3', isCollapsed && 'justify-center')}>
+          <div className={cn('flex items-center gap-3 cursor-pointer', isCollapsed && 'justify-center')} onClick={() => navigate('/profile')}>
             <Avatar className="h-9 w-9">
               <AvatarFallback className="bg-sidebar-primary text-sidebar-primary-foreground text-sm">
                 {userInitials}
