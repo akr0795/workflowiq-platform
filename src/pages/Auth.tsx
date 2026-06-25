@@ -116,8 +116,8 @@ const Auth: React.FC = () => {
               <Building2 className="w-7 h-7 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-foreground">Enterprise Workflow</h1>
-              <p className="text-muted-foreground text-sm">Intelligence Platform</p>
+              <h1 className="text-2xl font-bold text-foreground">WorkflowIQ</h1>
+              <p className="text-muted-foreground text-sm">Enterprise Suite</p>
             </div>
           </div>
 
