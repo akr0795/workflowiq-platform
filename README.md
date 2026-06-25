@@ -141,7 +141,7 @@ npm --version    # should be 9+
 ### 1. Clone the repository
 
 ```sh
-git clone https://github.com/akr0795/enterprise-workflow-platform.git
+git clone https://github.com/akr0795/workflowiq-platform.git
 cd enterprise-workflow-platform
 ```
 
